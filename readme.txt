@@ -1,5 +1,5 @@
 === Batch operations ===
-Contributors: Igor V Belousov
+Contributors: igor-v-belousov
 Tags: batch
 Requires at least: 3.3
 Tested up to: 3.3
