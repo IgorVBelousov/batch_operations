@@ -81,48 +81,48 @@ function batch_operations_process () {
     wp_send_json( array( 'do' => 'finish' ) );
   }
 
-  $carr = $wpdb->get_var( 'SELECT `operations` FROM `' . $wpdb->prefix . "batch_operations` WHERE `id` = $id;" );
-  if ( empty( $carr ) ) {
+  $current_array = $wpdb->get_var( 'SELECT `operations` FROM `' . $wpdb->prefix . "batch_operations` WHERE `id` = $id;" );
+  if ( empty( $current_array ) ) {
     wp_send_json( array( 'do' => 'finish' ) );
   }
 
   $result['do'] = '';
   $start = time() + 1;
   $flag = true;
-  $carr = unserialize( $carr );
+  $current_array = unserialize( $current_array );
 
   while ($flag) {
     //make array of parameters for function
-    $arr = array();
-    if ( isset( $carr['operations'][0][1] ) ) {
-      $arr = $carr['operations'][0][1];
+    $parameters_array = array();
+    if ( isset( $current_array['operations'][0][1] ) ) {
+      $parameters_array = $current_array['operations'][0][1];
     }
-    $arr[] = &$carr['context'];
+    $parameters_array[] = &$current_array['context'];
     //run function
-    call_user_func_array( $carr['operations'][0][0], $arr );
+    call_user_func_array( $current_array['operations'][0][0], $parameters_array );
 
-    if ( true == $carr['context']['finished'] ) {
-      $carr['context']['sandbox'] = array();
-      array_splice( $carr['operations'], 0, 1 );
-      $carr['current']++;
+    if ( true == $current_array['context']['finished'] ) {
+      $current_array['context']['sandbox'] = array();
+      array_splice( $current_array['operations'], 0, 1 );
+      $current_array['current']++;
     }
 
-    if ( time() > $start || 0 == count($carr['operations']) ) {
+    if ( time() > $start || 0 == count( $current_array['operations'] ) ) {
       $flag=false;
     }
   }
 
-  if ( 0 == count($carr['operations']) ) {
+  if ( 0 == count( $current_array['operations'] ) ) {
     $result['do']='finish';
   }
 
-  $result['percent'] = round( $carr['current'] / ($carr['count'] /100 ) );
-  $result['message'] = $carr['context']['message'];
+  $result['percent'] = round( $current_array['current'] / ($current_array['count'] / 100 ) );
+  $result['message'] = $current_array['context']['message'];
 
   if ( '' == $result['do'] ) {
     $wpdb->update(
       $wpdb->prefix . 'batch_operations',
-      array( 'operations' => serialize( $carr ) ),
+      array( 'operations' => serialize( $current_array ) ),
       array( 'id' => $id ),
       array( '%s' ),
       array( '%d' )
@@ -148,7 +148,7 @@ function batch_operations_process () {
  *   'finished' => 'my_finished_callback',
  * );
  *
- * BatchController::Start($batch);
+ * batch_operations_start($batch);
  * </pre>
  *
  * <ul>
