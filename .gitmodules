@@ -1,0 +1,3 @@
+[submodule "css/ShortCSS"]
+	path = css/ShortCSS
+	url = https://github.com/IgorVBelousov/ShortCSS.git

@@ -1,8 +1,8 @@
 === Batch operations ===
 Contributors: igor-v-belousov
 Tags: batch
-Requires at least: 3.3
-Tested up to: 3.3
+Requires at least: 3.5
+Tested up to: 3.5
 
 My version Drupal Batch API for WordPress.
 

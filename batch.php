@@ -2,13 +2,13 @@
 /**
  * Plugin Name: Batch operations
  * Description: My version Drupal Batch API for WordPress.
- * Version: 0.1.0a
+ * Version: 0.1.0
  * Author: Igor V Belousov
  * Author URI: http://belousovv.ru/
  */
 
 // Create table on activate
-register_activation_hook(ABSPATH.PLUGINDIR.'/batch-operations/bath.php','batch_operations_install');
+register_activation_hook(ABSPATH.PLUGINDIR.'/batch_operations/batch.php','batch_operations_install');
 
 // Add backend page without menu item
 add_action( 'admin_menu', 'batch_operations_add_page' );
@@ -27,7 +27,7 @@ function batch_operations_install () {
   global $wpdb;
 
   $table_name = $wpdb->prefix . 'batch_operations';
-
+  //WP>=3.5
   $charset_collate = $wpdb->get_charset_collate();
 
   $sql = "CREATE TABLE $table_name (
@@ -52,10 +52,10 @@ function batch_operations_add_page() {
  * View batch operations page
  */
 function batch_operations_page_view() {
-  //WP 3.3
+  //WP>=3.3
   wp_enqueue_script( 'jquery' );
-  wp_enqueue_script( 'batch_operations_script', plugin_dir_url('') . 'batch-operations/js/batch.min.js' );
-  wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch-operations/css/batch.css' );
+  wp_enqueue_script( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/js/batch.min.js' );
+  wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/css/batch.css' );
   $id = ( intval( $_REQUEST["id"] ) < 0 )? 0 : intval( $_REQUEST["id"] );
   ?>
   <script type="text/javascript">
