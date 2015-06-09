@@ -30,6 +30,14 @@ function batch_operations_test_page_view() {
       batch_operations_start($batch);
       break;
 
+    case 4:
+      $batch['operations'][]=array('test_batch_operation',array());
+      $batch['operations'][]=array('test_batch_operation',array());
+      $batch['operations'][]=array('test_batch_operation',array());
+      $batch['operations'][]=array('test_batch_operation',array());
+      $batch['operations'][]=array('test_batch_operation',array());
+      batch_operations_start($batch);
+      break;
     default:
       break;
   }
@@ -42,6 +50,7 @@ function batch_operations_test_page_view() {
       <li><a href="tools.php?page=batch-operations&id=0">$current_array is empty</a>
       <li><a href="tools.php?page=batch-operations-test&test=2">Default <strong>title</strong> & <strong>init_message</strong></a>
       <li><a href="tools.php?page=batch-operations-test&test=3">Set <strong>custom title</strong> & <strong>custom init_message</strong></a>
+      <li><a href="tools.php?page=batch-operations-test&test=4">5 operations</a>
     </ol>
   </div>
   <?php

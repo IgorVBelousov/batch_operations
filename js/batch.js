@@ -1,5 +1,6 @@
 jQuery(document).ready(function($) {
   var batch_progress = function (percent){
+    $(".batch-percent").html(percent + "%");
     return $(".batch-progress > span").animate({ width: percent + "%" }, 600);
   };
 

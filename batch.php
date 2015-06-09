@@ -77,11 +77,12 @@ function batch_operations_add_page() {
  * View batch operations page
  */
 function batch_operations_page_view() {
+  global $batch_operations_version;
   global $wpdb;
   //WP>=3.3
   wp_enqueue_script( 'jquery' );
-  wp_enqueue_script( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/js/batch.min.js' );
-  wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/css/batch.css' );
+  wp_enqueue_script( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/js/batch.min.js', array(), $batch_operations_version );
+  wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/css/batch.css', array(), $batch_operations_version );
 
   $id = ( intval( $_REQUEST["id"] ) < 0 )? 0 : intval( $_REQUEST["id"] );
 
@@ -105,6 +106,7 @@ function batch_operations_page_view() {
     <div class="batch-progress">
       <span style="width:0%;"></span>
     </div>
+    <div class="batch-progress-message"></div><div class="batch-percent"></div>
     <div class="batch-message"><?php echo $init_message; ?></div>
 
   </div>
