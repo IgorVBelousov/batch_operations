@@ -8,7 +8,9 @@
  */
 
 // Create table on activate
-register_activation_hook(ABSPATH.PLUGINDIR.'/batch_operations/batch.php','batch_operations_install');
+register_activation_hook( ABSPATH . PLUGINDIR . '/batch_operations/batch.php', 'batch_operations_install');
+// Delete table if deactivate
+register_deactivation_hook( ABSPATH . PLUGINDIR . '/batch_operations/batch.php', 'batch_operations_deactivate' );
 
 // Add backend page without menu item
 add_action( 'admin_menu', 'batch_operations_add_page' );
@@ -16,14 +18,20 @@ add_action( 'admin_menu', 'batch_operations_add_page' );
 // Add JSON query for run operation
 add_action( 'wp_ajax_batch_operations', 'batch_operations_process' );
 
+// Add translations
+add_action( 'init', 'batch_operations_load_translation_file');
+
 global $batch_operations_version;
-$batch_operations_version = '0.1.0a';
+$batch_operations_version = '0.1.0';
 
 
 /**
  * Create table on activate
  */
 function batch_operations_install () {
+  if ( ! current_user_can( 'activate_plugins' ) )
+    return;
+
   global $wpdb;
 
   $table_name = $wpdb->prefix . 'batch_operations';
@@ -42,32 +50,62 @@ function batch_operations_install () {
 }
 
 /**
+ * Delete table if deactivate
+ */
+function batch_operations_deactivate(){
+  if ( ! current_user_can( 'activate_plugins' ) )
+    return;
+
+  global $wpdb;
+
+  $query = 'DROP TABLE `' . $wpdb->prefix . 'batch_operations' . '`';
+  $wpdb->query( $query );
+}
+
+function batch_operations_load_translation_file() {
+  load_plugin_textdomain( 'batch-operations', false, '/batch_operations/languages' );
+}
+
+/**
  * Add backend page without menu item
  */
 function batch_operations_add_page() {
-  add_management_page( 'Batch operations', '', 'edit_posts', 'batch-operations', 'batch_operations_page_view' );
+  add_submenu_page(null,'Batch operations','Batch operations','edit_posts','batch-operations','batch_operations_page_view');
 }
 
 /**
  * View batch operations page
  */
 function batch_operations_page_view() {
+  global $wpdb;
   //WP>=3.3
   wp_enqueue_script( 'jquery' );
   wp_enqueue_script( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/js/batch.min.js' );
   wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/css/batch.css' );
+
   $id = ( intval( $_REQUEST["id"] ) < 0 )? 0 : intval( $_REQUEST["id"] );
+
+  $current_array = $wpdb->get_var( 'SELECT `operations` FROM `' . $wpdb->prefix . "batch_operations` WHERE `id` = $id;" );
+
+  $title = __( 'Processing', 'batch-operations' );
+  $init_message = '';
+  if ( ! empty( $current_array ) ) {
+    $current_array = unserialize( $current_array );
+    $title = ( empty ( $current_array['title'] ) ) ? $title : $current_array['title'] ;
+    $init_message = ( empty ( $current_array['init_message'] ) ) ? __( 'Initializing.', 'batch-operations' ) : $current_array['init_message'] ;
+  }
+
   ?>
   <script type="text/javascript">
     var batch_id=<?php print $id; ?>,successful_page='<?php print get_admin_url(); ?>';
   </script>
   <div class="wrap">
     <?php screen_icon(); ?>
-    <h2><?php echo get_admin_page_title() ?></h2>
+    <h2><?php echo $title ?></h2>
     <div class="batch-progress">
       <span style="width:0%;"></span>
     </div>
-    <div class="batch-message"></div>
+    <div class="batch-message"><?php echo $init_message; ?></div>
 
   </div>
   <?php

@@ -1,0 +1,22 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Batch operations\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-09 15:05+0300\n"
+"PO-Revision-Date: 2015-06-09 15:07+0300\n"
+"Last-Translator: Igor V Belousov <igor@belousovv.ru>\n"
+"Language-Team:  <igor@belousovv.ru>\n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.5\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#: batch.php:90
+msgid "Processing"
+msgstr "Обработка"
+
+#: batch.php:95
+msgid "Initializing."
+msgstr "Инициализация."
