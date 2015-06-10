@@ -1,8 +1,8 @@
 === Batch operations ===
 Contributors: igor-v-belousov
-Tags: batch
+Tags: batch, dev, development, prod, production
 Requires at least: 3.5
-Tested up to: 3.5
+Tested up to: 4.2
 
 My version Drupal Batch API for WordPress.
 
