@@ -70,7 +70,7 @@ function batch_operations_load_translation_file() {
  * Add backend page without menu item
  */
 function batch_operations_add_page() {
-  add_submenu_page(null,'Batch operations','Batch operations','edit_posts','batch-operations','batch_operations_page_view');
+  add_submenu_page( null, 'Batch operations', 'Batch operations', 'edit_posts', 'batch-operations', 'batch_operations_page_view' );
 }
 
 /**
@@ -106,8 +106,8 @@ function batch_operations_page_view() {
     <div class="batch-progress">
       <span style="width:0%;"></span>
     </div>
-    <div class="batch-progress-message"></div><div class="batch-percent"></div>
-    <div class="batch-message"><?php echo $init_message; ?></div>
+    <div class="batch-progress-message"><?php echo $init_message; ?></div><div class="batch-percent"></div>
+    <div class="batch-message"></div>
 
   </div>
   <?php
@@ -157,6 +157,17 @@ function batch_operations_process () {
   }
 
   $result['percent'] = round( $current_array['current'] / ($current_array['count'] / 100 ) );
+  $result['progress_message'] = str_replace(
+    array(
+      '%current%',
+      '%total%'
+      ),
+    array(
+      $current_array['current'],
+      $current_array['count']
+    ),
+    __( $current_array['progress_message'], 'batch-operations')
+  );
   $result['message'] = $current_array['context']['message'];
 
   if ( '' == $result['do'] ) {
@@ -193,10 +204,10 @@ function batch_operations_process () {
  *
  * <ul>
  * <li> operations: (required) Array of operations to be performed, where each item is an array consisting of the name of an implementation of callback_batch_operation() and an array of parameter. Example:
- * <li> title: A safe, translated string to use as the title for the progress page. Defaults to t('Processing').
- * <li> init_message: Message displayed while the processing is initialized. Defaults to t('Initializing.').
+ * <li> title: A safe, translated string to use as the title for the progress page. Defaults to __('Processing').
+ * <li> init_message: Message displayed while the processing is initialized. Defaults to __('Initializing.').
  * <li> progress_message: Message displayed while processing the batch. Available placeholders are %current% and %total%.
- * <li> error_message: Message displayed if an error occurred while processing the batch. Defaults to t('An error has occurred.').
+ * <li> error_message: Message displayed if an error occurred while processing the batch. Defaults to __('An error has occurred.').
  * <li> finished: Name of an implementation of callback_batch_finished(). This is executed after the batch has completed. This should be used to perform any result massaging that may be needed, and possibly save data in $_SESSION for display after final page redirection.
  *
  * Sample callback_batch_operation():
@@ -238,6 +249,10 @@ function batch_operations_start($batch_arr)
   );
   $batch_arr['count']   = count( $batch_arr['operations'] );
   $batch_arr['current'] = 0;
+
+  if ( empty( $batch_arr['progress_message'] ) ) {
+    $batch_arr['progress_message'] = __('Completed %current% of %total%.');
+  }
 
   $wpdb->insert(
     $wpdb->prefix . 'batch_operations',

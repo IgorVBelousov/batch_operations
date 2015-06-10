@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Batch operations 0.1.0\n"
 "Report-Msgid-Bugs-To: igor@belousovv.ru\n"
-"POT-Creation-Date: 2015-06-09 15:05+0300\n"
+"POT-Creation-Date: 2015-06-10 12:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,10 +11,14 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: batch.php:90
+#: batch.php:91
 msgid "Processing"
 msgstr ""
 
-#: batch.php:95
+#: batch.php:96
 msgid "Initializing."
+msgstr ""
+
+#: batch.php:254
+msgid "Completed %current% of %total%."
 msgstr ""
