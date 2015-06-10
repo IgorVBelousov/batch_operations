@@ -75,7 +75,6 @@ function batch_operations_test_page_view() {
 
   ?>
   <div class="wrap">
-    <?php screen_icon(); ?>
     <h2><?php echo get_admin_page_title() ?></h2>
     <ol>
       <li><a href="tools.php?page=batch-operations&id=0">$current_array is empty</a>

@@ -101,7 +101,6 @@ function batch_operations_page_view() {
     var batch_id=<?php print $id; ?>,successful_page='<?php print get_admin_url(); ?>';
   </script>
   <div class="wrap">
-    <?php screen_icon(); ?>
     <h2><?php echo $title ?></h2>
     <div class="batch-progress">
       <span style="width:0%;"></span>
