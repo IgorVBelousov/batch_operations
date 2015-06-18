@@ -7,11 +7,6 @@
  * Author URI: http://belousovv.ru/
  */
 
-// Create table on activate
-register_activation_hook( ABSPATH . PLUGINDIR . '/batch_operations/batch.php', 'batch_operations_install');
-// Delete table if deactivate
-register_deactivation_hook( ABSPATH . PLUGINDIR . '/batch_operations/batch.php', 'batch_operations_deactivate' );
-
 // Add backend page without menu item
 add_action( 'admin_menu', 'batch_operations_add_page' );
 
@@ -23,44 +18,6 @@ add_action( 'init', 'batch_operations_load_translation_file');
 
 global $batch_operations_version;
 $batch_operations_version = '0.1.0';
-
-
-/**
- * Create table on activate
- */
-function batch_operations_install () {
-  if ( ! current_user_can( 'activate_plugins' ) )
-    return;
-
-  global $wpdb;
-
-  $table_name = $wpdb->prefix . 'batch_operations';
-  //WP>=3.5
-  $charset_collate = $wpdb->get_charset_collate();
-
-  $sql = "CREATE TABLE $table_name (
-	  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-    `operations` longtext NOT NULL,
-    PRIMARY KEY (`id`)
-	) $charset_collate AUTO_INCREMENT=1;";
-
-  require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-  dbDelta( $sql );
-
-}
-
-/**
- * Delete table if deactivate
- */
-function batch_operations_deactivate(){
-  if ( ! current_user_can( 'activate_plugins' ) )
-    return;
-
-  global $wpdb;
-
-  $query = 'DROP TABLE `' . $wpdb->prefix . 'batch_operations' . '`';
-  $wpdb->query( $query );
-}
 
 function batch_operations_load_translation_file() {
   load_plugin_textdomain( 'batch-operations', false, '/batch_operations/languages' );
@@ -78,27 +35,30 @@ function batch_operations_add_page() {
  */
 function batch_operations_page_view() {
   global $batch_operations_version;
-  global $wpdb;
-  //WP>=3.3
+
   wp_enqueue_script( 'jquery' );
   wp_enqueue_script( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/js/batch.min.js', array(), $batch_operations_version );
   wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/css/batch.css', array(), $batch_operations_version );
 
-  $id = ( intval( $_REQUEST["id"] ) < 0 )? 0 : intval( $_REQUEST["id"] );
+  $id = ( empty( $_REQUEST["id"] ) )? 0 : $_REQUEST["id"];
+  if ( ! preg_match( '/^[\d,A-F]*$/', $id ) || ( strlen( $id ) != 39 ) ) {
+    $id = 0;
+  }
 
-  $current_array = $wpdb->get_var( 'SELECT `operations` FROM `' . $wpdb->prefix . "batch_operations` WHERE `id` = $id;" );
+  if ( false === ( $current_array = get_transient( 'batch_' . $id ) ) ) {
+    $id = 0;
+  }
 
   $title = __( 'Processing', 'batch-operations' );
   $init_message = '';
   if ( ! empty( $current_array ) ) {
-    $current_array = unserialize( $current_array );
     $title = ( empty ( $current_array['title'] ) ) ? $title : $current_array['title'] ;
     $init_message = ( empty ( $current_array['init_message'] ) ) ? __( 'Initializing.', 'batch-operations' ) : $current_array['init_message'] ;
   }
 
   ?>
   <script type="text/javascript">
-    var batch_id=<?php print $id; ?>,successful_page='<?php print get_admin_url(); ?>';
+    var batch_id='<?php print $id; ?>',successful_page='<?php print get_admin_url(); ?>';
   </script>
   <div class="wrap">
     <h2><?php echo $title ?></h2>
@@ -113,22 +73,18 @@ function batch_operations_page_view() {
 }
 
 function batch_operations_process () {
-  global $wpdb;
-  $id = ( intval( $_REQUEST["id"] ) < 0 )? 0 : intval( $_REQUEST["id"] );
-
-  if ( 1 > $id ){
+  $id = ( empty( $_REQUEST["id"] ) )? 0 : $_REQUEST["id"];
+  if ( ! preg_match( '/^[\d,A-F]*$/', $id ) || ( strlen( $id ) != 39 ) ) {
     wp_send_json( array( 'do' => 'finish' ) );
   }
 
-  $current_array = $wpdb->get_var( 'SELECT `operations` FROM `' . $wpdb->prefix . "batch_operations` WHERE `id` = $id;" );
-  if ( empty( $current_array ) ) {
+  if ( false === ( $current_array = get_transient( 'batch_' . $id ) ) ) {
     wp_send_json( array( 'do' => 'finish' ) );
   }
 
   $result['do'] = '';
   $start = time() + 1;
   $flag = true;
-  $current_array = unserialize( $current_array );
 
   while ($flag) {
     //make array of parameters for function
@@ -170,15 +126,9 @@ function batch_operations_process () {
   $result['message'] = $current_array['context']['message'];
 
   if ( '' == $result['do'] ) {
-    $wpdb->update(
-      $wpdb->prefix . 'batch_operations',
-      array( 'operations' => serialize( $current_array ) ),
-      array( 'id' => $id ),
-      array( '%s' ),
-      array( '%d' )
-    );
+    set_transient( 'batch_' . $id, $current_array , WEEK_IN_SECONDS );
   } else {
-    $wpdb->query( 'DELETE FROM `' . $wpdb->prefix . 'batch_operations' . "` WHERE `id`=$id ;" );
+    delete_transient( 'batch_' . $id );
   }
 
   wp_send_json( $result );
@@ -238,7 +188,7 @@ function batch_operations_process () {
  */
 function batch_operations_start($batch_arr)
 {
-  global $wpdb;
+  $id = rand( 100, 999 ) . strtoupper( md5( date( 'YMDBs' ) ) ) . rand( 1000, 9999 );
 
   $batch_arr['context'] = array(
     'message'  => '',
@@ -250,20 +200,11 @@ function batch_operations_start($batch_arr)
   $batch_arr['current'] = 0;
 
   if ( empty( $batch_arr['progress_message'] ) ) {
-    $batch_arr['progress_message'] = __('Completed %current% of %total%.');
+    $batch_arr['progress_message'] = __( 'Completed %current% of %total%.' );
   }
 
-  $wpdb->insert(
-    $wpdb->prefix . 'batch_operations',
-    array(
-      'operations' => serialize( $batch_arr )
-    ),
-    array(
-      '%s'
-    )
-  );
-
-  $location = get_admin_url(null, 'tools.php') . "?page=batch-operations&id=" . $wpdb->insert_id;
+  set_transient( 'batch_' . $id, $batch_arr , WEEK_IN_SECONDS );
+  $location = get_admin_url( null, 'tools.php' ) . "?page=batch-operations&id=" . $id;
 
   if ( ! headers_sent() ) {
     wp_redirect( $location );
