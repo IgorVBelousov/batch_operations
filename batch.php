@@ -58,7 +58,7 @@ function batch_operations_page_view() {
 
   ?>
   <script type="text/javascript">
-    var batch_id='<?php print $id; ?>',successful_page='<?php print get_admin_url(); ?>';
+    var batch_id='<?php print $id; ?>',successful_page='<?php echo $current_array['successful_page']; ?>';
   </script>
   <div class="wrap">
     <h2><?php echo $title ?></h2>
@@ -185,8 +185,9 @@ function batch_operations_process () {
  * </pre>
  *
  * @param array $batch_arr array operations and more
+ * @param string $redirect Url to redirect to when the batch has finished processing
  */
-function batch_operations_start($batch_arr)
+function batch_operations_start( $batch_arr, $redirect = NULL )
 {
   $id = rand( 100, 999 ) . strtoupper( md5( date( 'YMDBs' ) ) ) . rand( 1000, 9999 );
 
@@ -198,6 +199,12 @@ function batch_operations_start($batch_arr)
   );
   $batch_arr['count']   = count( $batch_arr['operations'] );
   $batch_arr['current'] = 0;
+
+  if ( empty( $redirect ) ) {
+    $batch_arr['successful_page'] =  get_admin_url();
+  } else {
+    $batch_arr['successful_page'] = $redirect;
+  }
 
   if ( empty( $batch_arr['progress_message'] ) ) {
     $batch_arr['progress_message'] = __( 'Completed %current% of %total%.' );

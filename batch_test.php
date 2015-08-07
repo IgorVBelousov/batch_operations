@@ -69,6 +69,11 @@ function batch_operations_test_page_view() {
       batch_operations_start($batch);
       break;
 
+    case 9:
+      $batch['operations'][]=array('test_batch_operation_params',array('c',3));
+      batch_operations_start($batch,get_admin_url( null, 'tools.php' ) . "?page=batch-operations-test");
+      break;
+
     default:
       break;
   }
@@ -85,6 +90,7 @@ function batch_operations_test_page_view() {
       <li><a href="tools.php?page=batch-operations-test&test=6">Test <strong>$context['finished']</strong></a>
       <li><a href="tools.php?page=batch-operations-test&test=7">Test params</a>
       <li><a href="tools.php?page=batch-operations-test&test=8">Test operations in class</a>
+      <li><a href="tools.php?page=batch-operations-test&test=9">Test redirect</a>
     </ol>
   </div>
   <?php
