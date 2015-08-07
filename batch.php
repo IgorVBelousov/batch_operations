@@ -102,8 +102,25 @@ function batch_operations_process () {
       $parameters_array = $current_array['operations'][0][1];
     }
     $parameters_array[] = &$current_array['context'];
+
+    $current_array['message'] = '';
+
+    global $batch_operations_error_array;
+    set_error_handler( 'batch_operations_error_handler' , E_NOTICE | E_WARNING );
     //run function
     call_user_func_array( $current_array['operations'][0][0], $parameters_array );
+    //check error
+    if ( ! empty($batch_operations_error_array) ) {
+      $current_array['success'] = false;
+      $current_array['error_operations'][] = array(
+                                     'operation'   => $current_array['operations'][0][0],
+                                     'parameters'  => $parameters_array,
+                                     'error_array' => $batch_operations_error_array
+                                    );
+      $batch_operations_error_array = NULL;
+    }
+
+    restore_error_handler();
 
     if ( true == $current_array['context']['finished'] ) {
       $current_array['context']['sandbox'] = array();
@@ -138,11 +155,21 @@ function batch_operations_process () {
     set_transient( 'batch_' . $id, $current_array , WEEK_IN_SECONDS );
   } else {
     delete_transient( 'batch_' . $id );
+    if ( ! empty( $current_array['finished'] ) ) {
+      call_user_func_array( $current_array['finished'], array( $current_array['success'], $current_array['context']['results'], $current_array['error_operations'] ) );
+    }
   }
 
   wp_send_json( $result );
 }
 
+global $batch_operations_error_array;
+
+function batch_operations_error_handler ($errno, $errmsg, $filename, $linenum, $vars) {
+  global $batch_operations_error_array;
+  $batch_operations_error_array=array($errno, $errmsg, $filename, $linenum, $vars);
+
+}
 
 /**
  * Start batch operations
@@ -220,6 +247,9 @@ function batch_operations_start( $batch_arr, $redirect = NULL )
   } else {
     $batch_arr['successful_page'] = $redirect;
   }
+
+  $batch_arr['success'] = true;
+  $batch_arr['error_operations'] = array();
 
   if ( empty( $batch_arr['progress_message'] ) ) {
     $batch_arr['progress_message'] = __( 'Completed %current% of %total%.' );
