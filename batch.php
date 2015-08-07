@@ -14,11 +14,17 @@ add_action( 'admin_menu', 'batch_operations_add_page' );
 add_action( 'wp_ajax_batch_operations', 'batch_operations_process' );
 
 // Add translations
-add_action( 'init', 'batch_operations_load_translation_file');
+add_action( 'init', 'batch_operations_load_translation_file' );
+
+// Add huck for view messages
+add_action( 'admin_notices', 'batch_operations_notice_view' );
 
 global $batch_operations_version;
 $batch_operations_version = '0.1.0';
 
+/**
+ * Load translation file
+ */
 function batch_operations_load_translation_file() {
   load_plugin_textdomain( 'batch-operations', false, '/batch_operations/languages' );
 }
@@ -155,12 +161,14 @@ function batch_operations_process () {
  * </pre>
  *
  * <ul>
- * <li> operations: (required) Array of operations to be performed, where each item is an array consisting of the name of an implementation of callback_batch_operation() and an array of parameter. Example:
+ * <li> operations: (required) Array of operations to be performed, where each item is an array consisting of the name
+ *      of an implementation of callback_batch_operation() and an array of parameter. Example:
  * <li> title: A safe, translated string to use as the title for the progress page. Defaults to __('Processing').
  * <li> init_message: Message displayed while the processing is initialized. Defaults to __('Initializing.').
  * <li> progress_message: Message displayed while processing the batch. Available placeholders are %current% and %total%.
  * <li> error_message: Message displayed if an error occurred while processing the batch. Defaults to __('An error has occurred.').
  * <li> finished: Name of an implementation of callback_batch_finished(). This is executed after the batch has completed. This should be used to perform any result massaging that may be needed, and possibly save data in $_SESSION for display after final page redirection.
+ * </ul>
  *
  * Sample callback_batch_operation():
  *
@@ -169,23 +177,27 @@ function batch_operations_process () {
  *   $context['results'][] = $text . $id;
  *   $context['message'] = 'Text + id ='.$text . $id;
  * }
+ * </pre>
  *
  * The $context array gathers batch context information about the execution (read),
  *  as well as 'return values' for the current operation (write)
  *  The following keys are provided :
+ *
  * 'results' (read / write): The array of results gathered so far by
  *   the batch processing, for the current operation to append its own.
+ *
  * 'message' (write): A text message displayed in the progress page.
  * The following keys allow for multi-step operations :
+ *
  * 'sandbox' (read / write): An array that can be freely used to
  *   store persistent data between iterations. It is recommended to
  *   use this instead of $_SESSION, which is unsafe if the user
  *   continues browsing in a separate window while the batch is processing.
+ *
  * 'finished' (write): A float number between 0 and 1 informing
  *   the processing engine of the completion level for the operation.
  *   1 (or no value explicitly set) means the operation is finished
  *   and the batch processing can continue to the next operation.
- * </pre>
  *
  * @param array $batch_arr array operations and more
  * @param string $redirect Url to redirect to when the batch has finished processing
@@ -228,4 +240,59 @@ function batch_operations_start( $batch_arr, $redirect = NULL )
     echo '</noscript>';
   }
   exit(0);
+}
+
+/**
+ * Set message for next view for current user
+ *
+ * @param string $message message text
+ * @param string $type type of message: info, success, warning, error. default - info
+ */
+function batch_operations_notice( $message, $type = 'info' ) {
+
+  if ( false === ( $messages = get_transient( 'batch_operations_notice' ) ) ) {
+    $messages = array();
+  }
+
+  $messages[ get_current_user_id() ][] = array(
+                                          'message' => $message,
+                                          'type'    => $type
+                                         );
+
+  set_transient( 'batch_operations_notice', $messages );
+
+}
+
+/**
+ * View message
+ */
+function batch_operations_notice_view() {
+  if ( $messages = get_transient( 'batch_operations_notice' )  ) {
+    $current_uid = get_current_user_id();
+    if ( ! empty( $messages[ $current_uid ] ) ) {
+      // if version < 4.1.1 then add css
+      global $wp_version;
+
+      $version = explode( '.', $wp_version );
+
+      if ( 4 > $version[0] || ( ( 4 == $version[0] && 1 >= $version[1] ) && 2 == count( $version ) ) ) {
+        global $batch_operations_version;
+        wp_enqueue_style( 'batch_operations_script', plugin_dir_url('') . 'batch_operations/css/notice.css', array(), $batch_operations_version );
+      }
+
+      // print message
+      foreach ( $messages[ $current_uid ] as $key => $value ) {
+        echo '<div class="notice notice-' . $value['type'] . '"><p>' . $value['message'] . '</p></div>';
+      }
+
+      //delete messages
+      unset( $messages[ $current_uid ] );
+
+      if ( empty( $messages ) ) {
+        delete_transient( 'batch_operations_notice' );
+      } else {
+        set_transient( 'batch_operations_notice', $messages );
+      }
+    }
+  }
 }

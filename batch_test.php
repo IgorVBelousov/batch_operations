@@ -74,6 +74,11 @@ function batch_operations_test_page_view() {
       batch_operations_start($batch,get_admin_url( null, 'tools.php' ) . "?page=batch-operations-test");
       break;
 
+    case 10:
+      $batch['operations'][]=array('test_batch_operation_messages',array());
+      batch_operations_start($batch,get_admin_url( null, 'tools.php' ) . "?page=batch-operations-test");
+      break;
+
     default:
       break;
   }
@@ -91,9 +96,20 @@ function batch_operations_test_page_view() {
       <li><a href="tools.php?page=batch-operations-test&test=7">Test params</a>
       <li><a href="tools.php?page=batch-operations-test&test=8">Test operations in class</a>
       <li><a href="tools.php?page=batch-operations-test&test=9">Test redirect</a>
+      <li><a href="tools.php?page=batch-operations-test&test=10">Test messages</a>
+      <li><a href="tools.php?page=batch-operations-test&test=11">Test finished_callback</a>
     </ol>
   </div>
   <?php
+}
+
+function test_batch_operation_messages( &$context ) {
+  batch_operations_notice('default');
+  batch_operations_notice('info','info');
+  batch_operations_notice('success','success');
+  batch_operations_notice('warning','warning');
+  batch_operations_notice('error','error');
+  $context['message'] = "Messages test";
 }
 
 function test_batch_operation( &$context ) {

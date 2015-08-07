@@ -16,7 +16,8 @@ module.exports = function(grunt) {
       compile: {
 
         files: {
-          'css/batch.css':'css/batch.styl'
+          'css/batch.css':'css/batch.styl',
+          'css/notice.css':'css/notice.styl'
         }
       }
     },
@@ -24,7 +25,8 @@ module.exports = function(grunt) {
     csso: {
       dist: {
         files: {
-          'css/batch.css':'css/batch.css'
+          'css/batch.css':'css/batch.css',
+          'css/notice.css':'css/notice.css'
         }
       }
     }
