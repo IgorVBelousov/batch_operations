@@ -72,6 +72,9 @@ function batch_operations_page_view() {
   <?php
 }
 
+/**
+ * Execution operations from $batch['operations']
+ */
 function batch_operations_process () {
   $id = ( empty( $_REQUEST["id"] ) )? 0 : $_REQUEST["id"];
   if ( ! preg_match( '/^[\d,A-F]*$/', $id ) || ( strlen( $id ) != 39 ) ) {
